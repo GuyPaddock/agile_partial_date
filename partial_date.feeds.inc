@@ -79,7 +79,7 @@ function partial_date_feeds_processor_targets_alter(&$targets, $entity_type, $bu
  *   The value to be mapped. Should be either a (flexible) date string
  *   or a FeedsDateTimeElement object. -- or a string, or perhaps a label?
  */
-function partial_date_feeds_set_target($source, $entity, $target, $feed_element)  {
+function partial_date_feeds_set_target($source, $entity, $target, $feed_element) {
   list($field_name, $sub_field, $sub_element) =
     array_pad(explode(':', $target, 3), 3, NULL);
 

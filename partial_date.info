@@ -5,6 +5,3 @@ core = 7.x
 dependencies[] = date
 
 files[] = includes/partial_date.views.year_period_handler.inc
-
-; Feeds
-files[] = mappings/partial_date.inc
