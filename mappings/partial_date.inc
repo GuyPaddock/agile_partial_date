@@ -1,16 +1,16 @@
 <?php
-
 /**
  * Implements hook_feeds_processor_targets_alter().
  *
  * @see FeedsNodeProcessor::getMappingTargets().
  */
-function _partial_date_feeds_processor_targets_alter(&$targets, $entity_type, $bundle_name)
-{
+function partial_date_feeds_processor_targets_alter(&$targets, $entity_type, $bundle_name) {
   $field_info = field_info_instances($entity_type, $bundle_name);
+
   foreach ($field_info as $name => $instance) {
     $label = $instance['label'];
     $info = field_info_field($name);
+
     if (strpos($info['type'],'partial_date')  === 0 ) {
       if ($instance['widget']['settings']['theme_overrides']['txt_short']) {
         $targets[$name . ':txt_short'] = array(
@@ -19,6 +19,7 @@ function _partial_date_feeds_processor_targets_alter(&$targets, $entity_type, $b
           'callback' => 'partial_date_feeds_set_target',
         );
       }
+
       if ($instance['widget']['settings']['theme_overrides']['txt_long']) {
         $targets[$name . ':txt_long'] = array(
           'name' => t($label . ': Long Text Description'),
@@ -26,6 +27,7 @@ function _partial_date_feeds_processor_targets_alter(&$targets, $entity_type, $b
           'callback' => 'partial_date_feeds_set_target',
         );
       }
+
       if ($instance['widget']['settings']['theme_overrides']['check_approximate']) {
         $targets[$name . ':check_approximate'] = array(
           'name' => t($label . ': Approximate (bool)'),
@@ -33,10 +35,14 @@ function _partial_date_feeds_processor_targets_alter(&$targets, $entity_type, $b
           'callback' => 'partial_date_feeds_set_target',
         );
       }
+
       $has_range = strpos($info['type'], '_range');
       $range_ends = $has_range ? array('from', 'to') : array('from');
+
       foreach ($range_ends as $range_end) {
-        foreach (array('year', 'month', 'day', 'hour', 'minute', 'second', 'timezone') as $qualifier) {
+        $qualifiers = array('year', 'month', 'day', 'hour', 'minute', 'second', 'timezone');
+
+        foreach ($qualifiers as $qualifier) {
           // Check if the field instance contains this subfield.
           if ($instance['widget']['settings']['granularity'][$range_end][$qualifier]) {
             $range_info = $has_range ? "\"$range_end\" element of the " : '';
@@ -46,6 +52,7 @@ function _partial_date_feeds_processor_targets_alter(&$targets, $entity_type, $b
               'callback' => 'partial_date_feeds_set_target',
             );
           }
+
           if ($qualifier != 'timezone') {
             if ($instance['widget']['settings']['estimates'][$range_end][$qualifier]) {
               $targets[$name . ':' . $range_end . ':' . $qualifier . '_estimate'] = array(
@@ -71,36 +78,37 @@ function _partial_date_feeds_processor_targets_alter(&$targets, $entity_type, $b
  * @param $feed_element
  *   The value to be mapped. Should be either a (flexible) date string
  *   or a FeedsDateTimeElement object. -- or a string, or perhaps a label?
- *
  */
-function partial_date_feeds_set_target($source, $entity, $target, $feed_element)
-{
-  list($field_name, $sub_field, $sub_element) = array_pad(explode(':', $target, 3), 3, NULL);
+function partial_date_feeds_set_target($source, $entity, $target, $feed_element)  {
+  list($field_name, $sub_field, $sub_element) =
+    array_pad(explode(':', $target, 3), 3, NULL);
+
   if (!is_array($feed_element)) {
     $feed_element = array($feed_element);
   }
+
   $delta = 0;
   $lang = isset($entity->language) ? $entity->language : 'und';
-  foreach ($feed_element as $f) {
+
+  foreach ($feed_element as $value) {
     switch ($sub_field) {
       case 'check_approximate':
       case 'txt_short':
       case 'txt_long':
-        $entity->{$field_name}[$lang][$delta][$sub_field] = $f;
-        $a = 1;
+        $entity->{$field_name}[$lang][$delta][$sub_field] = $value;
         break;
 
       case 'from':
       case 'to':
-        $f = partial_date_resolve_value($f, $field_name, $sub_element);
-        $entity->{$field_name}[$lang][$delta][$sub_field][$sub_element] = $f;
+        $value = partial_date_resolve_value($value, $field_name, $sub_element);
+        $entity->{$field_name}[$lang][$delta][$sub_field][$sub_element] = $value;
         break;
     }
+
     if (!isset($entity->{$field_name}[$lang][$delta]['from'])) {
       $entity->{$field_name}[$lang][$delta]['from'] = array();
     }
   }
-  return;
 }
 
 /**
@@ -130,5 +138,6 @@ function partial_date_resolve_value($value, $field_name, $sub_element) {
       $value = $key;
     }
   }
+
   return $value;
 }
